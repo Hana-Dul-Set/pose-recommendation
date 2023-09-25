@@ -1,0 +1,1 @@
+keys = ['name', 'size', 'keypoints', 'confidence', 'nose_pos', 'bbox']
