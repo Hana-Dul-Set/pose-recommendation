@@ -1,12 +1,25 @@
 import pandas as pd
 from tqdm import tqdm
 
+from .Subfilters.Subfilters import MustHaveKeypoints, HaveOneOfKeypoints, BBoxSizeRange
+
 class PoseFilterer:
-    def __init__(self):
+    def __init__(self, keypoint_existance_threshhold = 0.3):
         self.filters = []
+        self.keypoint_existance_threshhold = keypoint_existance_threshhold
 
     def add_subfilter(self, subfilter):
         self.filters.append(subfilter)
+
+    def must_have(self, keypoint_list):
+        self.add_subfilter(MustHaveKeypoints(keypoint_list, self.keypoint_existance_threshhold))
+
+    def have_one_of(self, keypoint_list):
+        self.add_subfilter(HaveOneOfKeypoints(keypoint_list, self.keypoint_existance_threshhold))
+
+    def bbox_range(self, min_size, max_size):
+        self.add_subfilter(BBoxSizeRange(min_size, max_size))
+
 
     def filter(self, formatted_dataframe, verbose = False):
         filtered_rows = []
