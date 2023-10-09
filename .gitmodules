@@ -1,0 +1,6 @@
+[submodule "vendors/pidinet"]
+	path = vendors/pidinet
+	url = https://github.com/Hana-Dul-Set/pidinet
+[submodule "vendors/Automated-objects-removal-inpainter"]
+	path = vendors/Automated-objects-removal-inpainter
+	url = https://github.com/Hana-Dul-Set/Automated-objects-removal-inpainter

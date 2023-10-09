@@ -7,7 +7,10 @@ class MustHaveKeypoints:
 
     def should_remove(self, row):
         for point in self.keypoint_list:
-            if row['keypoints'][point][2] < self.threshhold:
+            keypoint = row['keypoints'][point]
+            if keypoint[2] < self.threshhold:
+                return True
+            if not (0 <= keypoint[0] <= 1 and 0 <=keypoint[1] <= 1):
                 return True
         return False
     
@@ -22,7 +25,8 @@ class HaveOneOfKeypoints:
 
     def should_remove(self, row):
         for point in self.keypoint_list:
-            if row['keypoints'][point][2] > self.threshhold:
+            keypoint = row['keypoints'][point]
+            if keypoint[2] > self.threshhold and (0 <= keypoint[0] <= 1 and 0 <=keypoint[1] <= 1):
                 return False
         return True
     
@@ -42,3 +46,13 @@ class BBoxSizeRange:
     
     def __str__(self):
         return f"BBoxSizeRange[{self.min_size}, {self.max_size}]"
+    
+class MinConfidence:
+    def __init__(self, threshhold = 0.5):
+        self.threshhold = threshhold
+    
+    def should_remove(self, row):
+        return row['confidence'] < self.threshhold
+
+    def __str__(self):
+        return f"MinConfidence[{self.threshhold}]"
