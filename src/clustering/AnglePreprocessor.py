@@ -1,12 +1,28 @@
+import sys
+sys.path.append('src/')
 from tqdm import tqdm
 import pandas as pd
 import json
-
+import math
 from vis.pose_format import coco25
+from clustering.Distances import angle_distance
 
 parents = coco25['parents']
 
-class Preprocessor:
+angle_triplets = [(3, 1, 0), (4, 2, 0), (6, 5, 0), (7, 5, 0), (8, 6, 5), (9, 7, 5), (10, 8, 6), (11, 9, 7), (12, 14, 5),
+                   (13, 14, 5), (14, 5, 0), (15, 12, 14), (16, 13, 14), (17, 15, 12), (18, 16, 13), (19, 21, 17), (20, 19, 21), 
+                   (21, 17, 15), (22, 24, 18), (23, 22, 24), (24, 18, 16)]
+'''for idx in parents.keys():
+   p = parents[idx]
+   pp = parents[p]
+   if idx == p or p == pp:
+      continue
+   else:
+      angle_triplets.append((idx, p, pp))
+
+print(angle_triplets)'''
+
+class AnglePreprocessor:
     def __init__(self, formatted_data_df):
         self.formatted_data_df = formatted_data_df
     
@@ -16,23 +32,26 @@ class Preprocessor:
             nose_pos = row['nose_pos']
             keypoints = row['keypoints']
 
-            #make relative
-            relative_pose = [[0, 0, 0] for i in range(len(keypoints))]
+            #angles
+            angles = []
             for i in range(len(keypoints)):
-                score = keypoints[i][2]
-                if score < existance_threshhold:
-                    relative_pose[i][2] = 1
-                relative_pose[i][0] = keypoints[i][0] - keypoints[parents[i]][0]
-                relative_pose[i][1] = keypoints[i][1] - keypoints[parents[i]][1]
+                if keypoints[i][2] < existance_threshhold:
+                    keypoints[i] = [keypoints[parents[i]][0], keypoints[parents[i]][1], 1]
+                else:
+                    keypoints[i][2] = 0
+
+            for a, b, c in angle_triplets:
+                angle = calculate_angle(keypoints[a], keypoints[b], keypoints[c]) / 180
+                angles.append([angle, keypoints[b][2]])
             
             #flattened
-            result = [nose_pos] + relative_pose
+            result = [nose_pos] + angles
             result = [item for sublist in result for item in sublist]
 
             self.preprocessed_datas.append(result)
         return self.preprocessed_datas
     
-    def precalculate_distances(self, distance_fn, output_file_path):
+    def precalculate_distances(self, output_file_path):
         print("Start precalculating distances...")
         self.distance_datas = {}
         for idx1 in tqdm(range(len(self.preprocessed_datas))):
@@ -40,7 +59,7 @@ class Preprocessor:
             for idx2 in tqdm(range(idx1+1, len(self.preprocessed_datas)), leave = False):
                 item1 = self.preprocessed_datas[idx1]
                 item2 = self.preprocessed_datas[idx2]
-                self.distance_datas[str(idx1)][str(idx2)] = distance_fn(item1, item2)
+                self.distance_datas[str(idx1)][str(idx2)] = angle_distance(item1, item2)
 
         self.distance_datas['names'] = [row['name'] for idx, row in self.formatted_data_df.iterrows()]
         print(f"Precalcuation Done! Start saving to {output_file_path}...", end = '')
@@ -72,7 +91,20 @@ class Preprocessor:
 
     def get_names(self):
         return self.distance_datas['names']
+
+def calculate_angle(A, B, C):
+    vector_AB = [ A[0] - B[0], A[1] - B[1]]
+    vector_BC = [C[0] - B[0], C[1] - B[1]]
+    dot_product = vector_AB[0] * vector_BC[0] + vector_AB[1] * vector_BC[1]
+    magnitude_AB = math.sqrt(vector_AB[0] ** 2 + vector_AB[1] ** 2)
+    magnitude_BC = math.sqrt(vector_BC[0] ** 2 + vector_BC[1] ** 2)
+    if (magnitude_AB * magnitude_BC) == 0:
+        return 0
+    # Calculate the cosine of the angle using the dot product and magnitudes
+    cosine_theta = dot_product / (magnitude_AB * magnitude_BC)
+    # Calculate the angle in radians using the arccosine function
+    angle_radians = math.acos(cosine_theta)
+    angle_degrees = math.degrees(angle_radians)
     
-    def get_data(self, name):
-        idx = self.distance_datas['names'].index(name)
-        return self.distance_datas[str(idx)]
+    return angle_degrees
+

@@ -4,3 +4,6 @@
 [submodule "vendors/Automated-objects-removal-inpainter"]
 	path = vendors/Automated-objects-removal-inpainter
 	url = https://github.com/Hana-Dul-Set/Automated-objects-removal-inpainter
+[submodule "vendors/python-kmedoids"]
+	path = vendors/python-kmedoids
+	url = https://github.com/kno10/python-kmedoids.git

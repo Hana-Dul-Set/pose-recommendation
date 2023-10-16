@@ -1,6 +1,6 @@
-$input_dir = "datas/intermediate_datas/silhouette_inputs"
+$input_dir = "datas/intermediate_datas/silhouette_inputs_medoids200_1013"
 $temp_dir = "datas/intermediate_datas/silhouettes"
-$output_dir = "datas/silhouettes"
+$output_dir = "datas\silhouettes\medoids200_1013"
 $model = "vendors/pidinet/trained_models/table5_pidinet.pth"
 
 if (-not (Test-Path -Path $temp_dir -PathType Container))  { 

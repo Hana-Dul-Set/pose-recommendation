@@ -17,8 +17,12 @@ class KMeansClustering:
     def process(self):
         self.instance.process()
     
-    def get_clusters(self):
-        return self.instance.get_clusters()
+    def get_labels(self):
+        labels = [-1 for i in range(self.K)] 
+        for clusterid, cluster in enumerate(self.instance.get_clusters()):
+            for x in cluster:
+                labels[x] = clusterid
+        return labels
     
     def get_centers(self):
         return self.instance.get_centers()
